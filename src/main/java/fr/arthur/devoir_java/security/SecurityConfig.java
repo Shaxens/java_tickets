@@ -46,7 +46,7 @@ public class SecurityConfig {
 
     // TODO : Ajouter une route pour get les tickets non résolus sans auth
     // TODO : Pareil pour get les tickets non résolus /id
-    
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
         http.csrf(csrf -> csrf.disable())
@@ -56,6 +56,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/ticket/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/ticket/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/priority/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/category/**").permitAll()
 
                         // Endpoints admin
                         .requestMatchers("/api/user/**").hasRole("ADMIN").
@@ -76,30 +78,5 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-//
-//    @Bean
-//    public SecurityFilterChain configureAuthentification(HttpSecurity http) throws Exception {
-//
-//        return http
-//                .csrf(c -> c.disable()) //desactiver la protection de la faille CSRF (création de token de formulaie)
-//                .cors(c -> c.configurationSource(corsConfigurationSource())) // definition des regles du CORS policy
-//                .sessionManagement(
-//                        s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//                )// desactivation des sessions
-//                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-//                .build();
-//
-//    }
-//
-//    public CorsConfigurationSource corsConfigurationSource() {
-//        CorsConfiguration corsConfiguration = new CorsConfiguration();
-//        corsConfiguration.setAllowedOrigins(List.of("*"));
-//        corsConfiguration.setAllowedMethods(List.of("GET", "POST", "DELETE", "PUT", "PATCH"));
-//        corsConfiguration.setAllowedHeaders(List.of("*"));
-//
-//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//        source.registerCorsConfiguration("/**", corsConfiguration);
-//        return source;
-//    }
 
 }

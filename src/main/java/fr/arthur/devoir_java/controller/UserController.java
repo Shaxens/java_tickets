@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import fr.arthur.devoir_java.dao.UserDao;
 import fr.arthur.devoir_java.model.User;
 import fr.arthur.devoir_java.security.IsAdmin;
-import fr.arthur.devoir_java.view.TicketView;
+import fr.arthur.devoir_java.view.UserView;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -32,13 +32,13 @@ public class UserController {
     protected PasswordEncoder passwordEncoder;
 
     @GetMapping("/list")
-    @JsonView(TicketView.class)
+    @JsonView(UserView.class)
     public List<User> getAll() {
         return userDao.findAll();
     }
 
     @GetMapping("/{id}")
-//    @JsonView(VendeurWithEmailView.class)
+    @JsonView(UserView.class)
     public ResponseEntity<User> get(@PathVariable int id) {
 
         Optional<User> optionalUser = userDao.findById(id);
