@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -38,32 +39,65 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody User user) {
+        try {
+            if (userDao.findByPseudo(user.getPseudo()).isPresent()) {
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Ce pseudo est déjà utilisé");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+            }
 
-        if (userDao.findByPseudo(user.getPseudo()).isPresent()) {
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
+            if (user.getPseudo() == null || user.getPseudo().isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+            user.setAdmin(false);
+
+            userDao.save(user);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Utilisateur créé avec succès");
+            response.put("pseudo", user.getPseudo());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        } catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Erreur lors de la création de l'utilisateur");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        user.setAdmin(false);
-
-        userDao.save(user);
-
-        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody User user) {
         try {
-            AppUserDetails userDetails = (AppUserDetails) authenticationProvider.authenticate(
+            Authentication authentication = authenticationProvider.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             user.getPseudo(), user.getPassword()
-                    )).getPrincipal();
+                    ));
 
+            AppUserDetails userDetails = (AppUserDetails) authentication.getPrincipal();
             String jwt = jwtUtils.generateToken(userDetails);
 
-            return ResponseEntity.ok(jwt);
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", jwt);
+            response.put("type", "Bearer");
+            response.put("pseudo", userDetails.getUsername());
+            response.put("admin", userDetails.getUser().isAdmin());
+
+            return ResponseEntity.ok(response);
+
+        } catch (BadCredentialsException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Identifiants invalides");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Identifiants invalides");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
     }
 
