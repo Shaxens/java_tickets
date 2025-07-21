@@ -45,7 +45,6 @@ public class UserController {
 
         if (optionalUser.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            //return ResponseEntity.notFound().build();
         }
 
         return new ResponseEntity<>(optionalUser.get(), HttpStatus.OK);
